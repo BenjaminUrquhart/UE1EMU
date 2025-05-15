@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"UE1Emulator",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"UE1Emulator",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

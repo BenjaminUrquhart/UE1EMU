@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"UE1Assembly",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"UE1Assembly",
+  "parent":{
+    "name":"Scripts",
+    "path":"folders/Scripts.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
