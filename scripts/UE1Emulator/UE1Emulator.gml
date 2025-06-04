@@ -23,12 +23,12 @@ function UE1Emulator(instructions, switches = 0) constructor {
 	
 	reset();
 	
-	static read_reg = function(reg) {
+	static read_reg = function(reg, force = false) {
+		if(!ien && !force) {
+			return 0;
+		}
 		if(reg == 8) {
 			return result;
-		}
-		if(!ien) {
-			return 0;
 		}
 		if(reg < 8) {
 			return (scratch >> reg) & 1;	
@@ -38,7 +38,7 @@ function UE1Emulator(instructions, switches = 0) constructor {
 	
 	static write_reg = function(reg, bit) {
 		if(!oen) {
-			return;
+			bit = 0;
 		}
 		if(reg < 8) {
 			scratch = ((scratch & ~(1 << reg)) | (bit << reg)) & 0xff;
@@ -62,27 +62,27 @@ function UE1Emulator(instructions, switches = 0) constructor {
 			var inst = instructions[current];
 			switch(inst.opcode) {
 				case Opcode.NOP0: flag0 = 1; break;
-				case Opcode.LD:   if ien result = read_reg(inst.register); break;
-				case Opcode.ADD:  if ien {
+				case Opcode.LD:   result = read_reg(inst.register); break;
+				case Opcode.ADD: {
 					var res = result + carry + read_reg(inst.register);
 					result = res & 1;
 					carry = (res >> 1) & 1;
 				} break;
-				case Opcode.SUB:  if ien {
+				case Opcode.SUB: {
 					// this doesn't make sense to me but it's how I understand the spec
 					// and I don't want to look at existing emulators
-					var res = result + carry + !read_reg(inst.register);
+					var res = result + carry + (ien && !read_reg(inst.register));
 					result = res & 1;
 					carry = (res >> 1) & 1;
 				} break;
 				case Opcode.ONE:  result = 1; carry = 0; break;
-				case Opcode.NAND: if ien result &= (~read_reg(inst.register)) & 1; break;
-				case Opcode.OR:   if ien result |= read_reg(inst.register); break;
-				case Opcode.XOR:  if ien result ^= read_reg(inst.register); break;
-				case Opcode.STO:  if oen write_reg(inst.register, result); break;
-				case Opcode.STOC: if oen write_reg(inst.register, !result); break; //result is 1 bit
-				case Opcode.IEN:  ien = read_reg(inst.register); break;
-				case Opcode.OEN:  oen = read_reg(inst.register); break;
+				case Opcode.NAND: result &= (ien & ~read_reg(inst.register)) & 1; break;
+				case Opcode.OR:   result |= read_reg(inst.register); break;
+				case Opcode.XOR:  result ^= read_reg(inst.register); break;
+				case Opcode.STO:  write_reg(inst.register, result); break;
+				case Opcode.STOC: write_reg(inst.register, !result); break; //result is 1 bit
+				case Opcode.IEN:  ien = read_reg(inst.register, true); break;
+				case Opcode.OEN:  oen = read_reg(inst.register, true); break;
 				case Opcode.IOC:  ioc_handler(); break;
 				case Opcode.RTN:  rtn = 1; current++; break;
 				case Opcode.SKZ:  current += !result; break;
