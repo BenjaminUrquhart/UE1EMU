@@ -1,8 +1,7 @@
-if((step || !paused) && !emu.flagF && !emu.reached_end()) {
-	var inst = emu.instructions[emu.current].toString();
-	emu.tick();
+if((step || !paused) && !emu.flagF) {
+	var inst = emu.instructions[emu.reached_end() ? 0 : emu.current].toString();
+	ticked = !emu.tick();
 	show_debug_message($"{inst} -> {emu}");
-	ticked = true;
 }
 step = false;
 

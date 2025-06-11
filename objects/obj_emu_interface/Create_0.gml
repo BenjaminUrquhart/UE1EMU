@@ -1,6 +1,8 @@
 emu = new UE1Emulator(code);
 has_source = !is_undefined(lines);
 
+emu.loop_on_end = true;
+
 if(!has_source) {
 	// Attempt to disassemble code if no source is provided
 	// Feather ignore GM1041
@@ -25,7 +27,7 @@ ticked = false;
 paused = true;
 step = false;
 
-clock_speed = 10;
+clock_speed = 60;
 alarm[0] = game_get_speed(gamespeed_fps) / clock_speed;
 
 count = array_length(lines);

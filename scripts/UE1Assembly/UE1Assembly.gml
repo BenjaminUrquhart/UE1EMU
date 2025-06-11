@@ -55,6 +55,15 @@ function Instruction() constructor {
 // TODO: allow arrays of strings (as lines of code)
 // to optimize parsing input from the integrated editor.
 function UE1_assemble(code) {
+	static no_reg = {
+		"NOP0": true,
+		"ONE": true,
+		"IOC": true,
+		"RTN": true,
+		"SKZ": true,
+		"NOPF": true
+	}
+	
 	var out = new DynamicArray();
 	
 	var pos = 1;
@@ -83,7 +92,12 @@ function UE1_assemble(code) {
 					buffer = "";
 				}
 				else if(inst.register == -1 && inst.opcode != -1) {
-					throw $"Unexpected EOL";
+					if(variable_struct_exists(no_reg, global.opcode_mapping[$ inst.opcode])) {
+						inst.register = Register.RR;
+					}
+					else {
+						throw $"Unexpected EOL";
+					}
 				}
 				if(inst.opcode != -1) {
 					inst._lineno = line - 1;

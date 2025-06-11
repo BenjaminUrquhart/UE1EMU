@@ -21,6 +21,8 @@ function UE1Emulator(instructions, switches = 0) constructor {
 	self.switches = switches;
 	self.instructions = instructions;
 	
+	self.loop_on_end = false;
+	
 	reset();
 	
 	static read_reg = function(reg, force = false) {
@@ -37,8 +39,11 @@ function UE1Emulator(instructions, switches = 0) constructor {
 	}
 	
 	static write_reg = function(reg, bit) {
+		// I'm getting conflicting information on whether
+		// this should be forced 0 or skipped.
 		if(!oen) {
-			bit = 0;
+			return;
+			//bit = 0;
 		}
 		if(reg < 8) {
 			scratch = ((scratch & ~(1 << reg)) | (bit << reg)) & 0xff;
@@ -53,6 +58,12 @@ function UE1Emulator(instructions, switches = 0) constructor {
 	
 	static tick = function() {
 		var ended = reached_end();
+		if(ended && loop_on_end) {
+			current = 0;
+			if(reached_end()) {
+				return true;	
+			}
+		}
 		if(!flagF && !ended) {
 			// idk when these are reset on hardware
 			flag0 = 0;
@@ -71,12 +82,12 @@ function UE1Emulator(instructions, switches = 0) constructor {
 				case Opcode.SUB: {
 					// this doesn't make sense to me but it's how I understand the spec
 					// and I don't want to look at existing emulators
-					var res = result + carry + (ien && !read_reg(inst.register));
+					var res = result + carry + !(ien && read_reg(inst.register));
 					result = res & 1;
 					carry = (res >> 1) & 1;
 				} break;
 				case Opcode.ONE:  result = 1; carry = 0; break;
-				case Opcode.NAND: result &= (ien & ~read_reg(inst.register)) & 1; break;
+				case Opcode.NAND: result = !(result && ien && read_reg(inst.register)); break;
 				case Opcode.OR:   result |= read_reg(inst.register); break;
 				case Opcode.XOR:  result ^= read_reg(inst.register); break;
 				case Opcode.STO:  write_reg(inst.register, result); break;
@@ -90,6 +101,10 @@ function UE1Emulator(instructions, switches = 0) constructor {
 				default: do_throw($"Invalid opcode {inst.opcode} at position {current}");
 			}
 			current++;
+			
+			if(loop_on_end) {
+				current %= array_length(instructions)
+			}
 		}
 		return flagF || ended;
 	}
